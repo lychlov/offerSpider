@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import requests
 import scrapy
 from bs4 import BeautifulSoup
+
 from offerSpider.items import StoreItem, CouponItem
+from offerSpider.util import get_header
 
 
 class OfferSpider(scrapy.Spider):
@@ -30,8 +33,20 @@ class OfferSpider(scrapy.Spider):
     def store_page_parse(self, response):
         html = response.body
         soup = BeautifulSoup(html)
-        storeItem = StoreItem()
-        couponItem = CouponItem()
+        store_item = StoreItem()
+        coupon_item = CouponItem()
         # 处理字段定位
 
         pass
+
+
+def get_real_url(url, try_count=1):
+    if try_count > 3:
+        return url
+    try:
+        rs = requests.get(url, headers=get_header(), timeout=10)
+        if rs.status_code > 400:
+            return get_real_url(url, try_count + 1)
+        return rs.url
+    except:
+        return get_real_url(url, try_count + 1)
