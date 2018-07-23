@@ -13,7 +13,7 @@ BOT_NAME = 'offerSpider'
 
 SPIDER_MODULES = ['offerSpider.spiders']
 NEWSPIDER_MODULE = 'offerSpider.spiders'
-IMAGES_STORE = 'spider/'
+IMAGES_STORE = 'spider'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'offerSpider (+http://www.yourdomain.com)'
@@ -64,9 +64,9 @@ DOWNLOAD_DELAY = 2
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-   'offerSpider.pipelines.OfferImagePipeline': 300,
-}
+# ITEM_PIPELINES = {
+#    'offerSpider.pipelines.OfferImagePipeline': 300,
+# }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html

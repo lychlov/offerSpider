@@ -70,18 +70,21 @@ class OfferSpider(scrapy.Spider):
     def parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
-        letters = soup.find_all('div', class_='letters')
+        letters = soup.find('div', class_='letters').find_all('a')
         for letter in letters:
-            href = self.base_url + letter.find('a').get('href')
+            href = self.base_url + letter.get('href')
             yield scrapy.Request(href, callback=self.letter_page_parse)
         pass
 
     def letter_page_parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
-        stores = soup.find_all('div', class_='stores-by-letter')
+        try:
+            stores = soup.find('div', class_='stores-by-letter').find_all('a')
+        except:
+            print(response.url)
         for store in stores:
-            href = self.base_url + store.find('a').get('href')
+            href = self.base_url + store.get('href')
             yield scrapy.Request(href, callback=self.store_page_parse)
         pass
 
@@ -111,16 +114,21 @@ class OfferSpider(scrapy.Spider):
         for offer in soup.find_all('div', class_='offerstrip'):
             coupon_item['type'] = 'coupon'
             coupon_item['name'] = offer.find('div', class_='offer-info').find('a').text
-            coupon_item['site'] = 'offer.com'
+            coupon_item['site'] = 'offers.com'
             coupon_item['description'] = coupon_item['name']
             coupon_item['verify'] = offer.find('span', class_='verified').find('strong').text
             coupon_item['link'] = self.base_url + offer.find('a').get('href')
             coupon_item['expire_at'] = None
-            coupon_item['coupon_type'] = offer.find('div', class_='badge-text').text.strip()
+            try:
+                div = offer.find('div', class_='badge-text')
+                span = offer.find('span', class_='dolphin flag')
+                coupon_item['coupon_type'] = div.text.strip() if div else span.text
+            except:
+                coupon_item['coupon_type']=offer.find('div',class_='discount').text.strip()
             if 'code' in coupon_item['coupon_type']:
-                data_offer_id= offer.get('data-offer-id')
-                res = requests.get(response.url+'?em='+data_offer_id)
-                code = re.findall(r'<div class="coupon-code">(.+?)</div>',res.content.decode())
+                data_offer_id = offer.get('data-offer-id')
+                res = requests.get(response.url + '?em=' + data_offer_id)
+                code = re.findall(r'<div class="coupon-code">(.+?)</div>', res.content.decode())
                 coupon_item['code'] = code[0] if code else ''
             coupon_item['final_website'] = store_item['final_website']
             coupon_item['store'] = store_item['title']
