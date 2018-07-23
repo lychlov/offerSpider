@@ -66,6 +66,7 @@ class OfferSpider(scrapy.Spider):
     allowed_domains = ['offers.com']
     start_urls = ['https://www.offers.com/stores/']
     base_url = 'https://www.offers.com'
+    code_url = 'https://www.offers.com/exit/modal/offerid/code_id/?view_buoy=long_id'
 
     def parse(self, response):
         html = response.body
@@ -116,20 +117,27 @@ class OfferSpider(scrapy.Spider):
             coupon_item['name'] = offer.find('div', class_='offer-info').find('a').text
             coupon_item['site'] = 'offers.com'
             coupon_item['description'] = coupon_item['name']
-            coupon_item['verify'] = offer.find('span', class_='verified').find('strong').text
+            try:
+                coupon_item['verify'] = 'Y' if offer.find('span', class_='verified').find('strong').text=="Verified" else "N"
+            except:
+                print(offer)
             coupon_item['link'] = self.base_url + offer.find('a').get('href')
             coupon_item['expire_at'] = None
             try:
                 div = offer.find('div', class_='badge-text')
                 span = offer.find('span', class_='dolphin flag')
-                coupon_item['coupon_type'] = div.text.strip() if div else span.text
+                coupon_item['coupon_type'] = div.text.strip() if div else span.text.strip()
             except:
-                coupon_item['coupon_type']=offer.find('div',class_='discount').text.strip()
+                coupon_item['coupon_type'] = offer.find('div', class_='discount').text.strip()
             if 'code' in coupon_item['coupon_type']:
                 data_offer_id = offer.get('data-offer-id')
-                res = requests.get(response.url + '?em=' + data_offer_id)
+                long_id = coupon_item['link'].split('/')[-2]
+                code_get_url = self.code_url.replace('code_id', data_offer_id).replace('long_id', long_id)
+                res = requests.get(code_get_url, headers=get_header(),verify=False)
                 code = re.findall(r'<div class="coupon-code">(.+?)</div>', res.content.decode())
                 coupon_item['code'] = code[0] if code else ''
+            else:
+                coupon_item['code'] = ''
             coupon_item['final_website'] = store_item['final_website']
             coupon_item['store'] = store_item['title']
             coupon_item['store_url_name'] = response.url
