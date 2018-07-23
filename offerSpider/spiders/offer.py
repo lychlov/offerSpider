@@ -118,9 +118,10 @@ class OfferSpider(scrapy.Spider):
             coupon_item['site'] = 'offers.com'
             coupon_item['description'] = coupon_item['name']
             try:
-                coupon_item['verify'] = 'Y' if offer.find('span', class_='verified').find('strong').text=="Verified" else "N"
+                coupon_item['verify'] = 'Y' if offer.find('span', class_='verified').find(
+                    'strong').text == "Verified" else "N"
             except:
-                print(offer)
+                coupon_item['verify'] = 'N'
             coupon_item['link'] = self.base_url + offer.find('a').get('href')
             coupon_item['expire_at'] = None
             try:
@@ -133,7 +134,7 @@ class OfferSpider(scrapy.Spider):
                 data_offer_id = offer.get('data-offer-id')
                 long_id = coupon_item['link'].split('/')[-2]
                 code_get_url = self.code_url.replace('code_id', data_offer_id).replace('long_id', long_id)
-                res = requests.get(code_get_url, headers=get_header(),verify=False)
+                res = requests.get(code_get_url, headers=get_header(), verify=False)
                 code = re.findall(r'<div class="coupon-code">(.+?)</div>', res.content.decode())
                 coupon_item['code'] = code[0] if code else ''
             else:
