@@ -59,3 +59,18 @@ class CouponItem(scrapy.Item):
     download_timeout = scrapy.Field()
     download_slot = scrapy.Field()
     download_latency = scrapy.Field()
+
+
+class CategoryItem(scrapy.Item):
+    type = scrapy.Field()
+    name = scrapy.Field()
+    url_name = scrapy.Field()
+    description = scrapy.Field()
+    site = scrapy.Field()
+    icon_code = scrapy.Field()
+    icon_color = scrapy.Field()
+    status = scrapy.Field()
+    depth = scrapy.Field()
+    download_timeout = scrapy.Field()
+    download_slot = scrapy.Field()
+    download_latency = scrapy.Field()

@@ -4,7 +4,7 @@ import requests
 import scrapy
 from bs4 import BeautifulSoup
 
-from offerSpider.items import StoreItem, CouponItem
+from offerSpider.items import StoreItem, CouponItem, CategoryItem
 from offerSpider.util import get_header
 import re
 
@@ -64,22 +64,51 @@ def get_domin_url(long_url):
 class OfferSpider(scrapy.Spider):
     name = 'offer'
     allowed_domains = ['offers.com']
-    start_urls = ['https://www.offers.com/stores/']
+    start_urls = ['https://www.offers.com/stores/', 'https://www.offers.com/c/']
     base_url = 'https://www.offers.com'
     code_url = 'https://www.offers.com/exit/modal/offerid/code_id/?view_buoy=long_id'
 
     def parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
-        letters = soup.find('div', class_='letters').find_all('a')
-        for letter in letters:
-            href = self.base_url + letter.get('href')
-            yield scrapy.Request(href, callback=self.letter_page_parse)
+        if response.url == self.start_urls[0]:
+            letters = soup.find('div', class_='letters').find_all('a')
+            for letter in letters:
+                href = self.base_url + letter.get('href')
+                yield scrapy.Request(href, callback=self.letter_page_parse)
+        elif response.url == self.start_urls[1]:
+            top_categories = soup.find_all('div', class_='category list')
+            for top_category in top_categories:
+                categries = top_category.find_all('a')
+                for category in categries:
+                    href = self.base_url + category.get('href')
+                    yield scrapy.Request(href, callback=self.category_page_parse)
+        pass
+
+    def category_page_parse(self, response):
+        html = response.body
+        soup = BeautifulSoup(html, 'lxml')
+        category_item = CategoryItem()
+        category_item['type'] = 'category'
+        category_item['name'] = soup.find('div', id='middle-info').find('strong').text
+        category_item['url_name'] = response.url.split('/')[-2]
+        category_item['description'] = soup.find('div', id='middle-info').find('p').text
+        category_item['site'] = 'offers.com'
+        category_item['icon_code'] = 'icon-christmas-001'
+        category_item['icon_color'] = 'primary'
+        category_item['status'] = '0'
+        # category_item['depth = scrapy.Field()
+        # category_item['download_timeout = scrapy.Field()
+        # category_item['download_slot = scrapy.Field()
+        # category_item['download_latency = scrapy.Field()
+        yield category_item
+
         pass
 
     def letter_page_parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
+        stores = []
         try:
             stores = soup.find('div', class_='stores-by-letter').find_all('a')
         except:
