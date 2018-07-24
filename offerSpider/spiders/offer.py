@@ -30,23 +30,23 @@ class OfferSpider(scrapy.Spider):
             for letter in letters:
                 href = self.base_url + letter.get('href')
                 yield scrapy.Request(href, callback=self.letter_page_parse)
-                # elif response.url == self.start_urls[1]:
-                #     top_categories = soup.find_all('div', class_='category list')
-                #     for top_category in top_categories:
-                #         categries = top_category.find_all('a')
-                #         for category in categries:
-                #             href = self.base_url + category.get('href')
-                #             yield scrapy.Request(href, callback=self.category_page_parse)
-                # pass
+        elif response.url == self.start_urls[1]:
+            top_categories = soup.find_all('div', class_='category list')
+            for top_category in top_categories:
+                categries = top_category.find_all('a')
+                for category in categries:
+                    href = self.base_url + category.get('href')
+                    yield scrapy.Request(href, callback=self.category_page_parse)
+        pass
 
     def category_page_parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
         category_item = CategoryItem()
         category_item['type'] = 'category'
-        category_item['name'] = soup.find('div', id='middle-info').find('strong').text
+        category_item['name'] = soup.find('div', id='middle-info').find('strong').text.strip()
         category_item['url_name'] = response.url.split('/')[-2]
-        category_item['description'] = soup.find('div', id='middle-info').find('p').text
+        category_item['description'] = soup.find('div', id='middle-info').find('p').text.strip()
         category_item['site'] = 'offers.com'
         category_item['icon_code'] = 'icon-christmas-001'
         category_item['icon_color'] = 'primary'
@@ -95,7 +95,6 @@ class OfferSpider(scrapy.Spider):
             print(store_item['final_website'])
         # coupon
         for offer in soup.find_all('div', class_='offerstrip'):
-
             coupon_item = CouponItem()
             coupon_item['type'] = 'coupon'
             coupon_item['name'] = offer.find('div', class_='offer-info').find('a').text
@@ -121,7 +120,9 @@ class OfferSpider(scrapy.Spider):
                 res = requests.get(code_get_url, headers=get_header(), verify=False)
                 code = re.findall(r'<div class="coupon-code">(.+?)</div>', res.content.decode())
                 coupon_item['code'] = code[0] if code else ''
+                coupon_item['coupon_type'] = "CODE"
             else:
+                coupon_item['coupon_type'] = "DEAL"
                 coupon_item['code'] = ''
             coupon_item['final_website'] = store_item['final_website']
             coupon_item['store'] = store_item['title']
