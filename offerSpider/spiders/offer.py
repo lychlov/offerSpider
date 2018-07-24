@@ -154,6 +154,8 @@ def get_real_url(url, try_count=1):
             target_url = re.findall(r'replace\(\'(.+?)\'', rs.content.decode())
             if target_url:
                 return target_url[0].replace('\\', '') if re.match(r'http', target_url[0]) else rs.url
+            else:
+                return rs.url
         else:
             return get_real_url(rs.url)
     except Exception as e:
