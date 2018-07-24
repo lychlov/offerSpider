@@ -9,54 +9,8 @@ from offerSpider.util import get_header
 import re
 
 
-def loacte_items(soup):
-    store_item = StoreItem()
-    coupon_item = CouponItem()
-    # store
-    store_item['type'] = scrapy.Field()
-    store_item['logo_url'] = scrapy.Field()
-    store_item['title'] = scrapy.Field()
-    store_item['name'] = scrapy.Field()
-    store_item['site'] = scrapy.Field()
-    store_item['url_name'] = scrapy.Field()
-    store_item['description'] = scrapy.Field()
-    store_item['category'] = scrapy.Field()
-    store_item[' website'] = scrapy.Field()
-    store_item['country'] = scrapy.Field()
-    store_item['picture'] = scrapy.Field()
-    store_item['coupon_count'] = scrapy.Field()
-    store_item['created_at'] = scrapy.Field()
-    store_item['final_website'] = scrapy.Field()
-    store_item['depth'] = scrapy.Field()
-    # coupon
-    coupon_item['type'] = scrapy.Field()
-    coupon_item['name'] = scrapy.Field()
-    coupon_item['site'] = scrapy.Field()
-    coupon_item['description'] = scrapy.Field()
-    coupon_item['verify'] = scrapy.Field()
-    coupon_item['link'] = scrapy.Field()
-    coupon_item['expire_at'] = scrapy.Field()
-    coupon_item['coupon_type'] = scrapy.Field()
-    coupon_item['code'] = scrapy.Field()
-    coupon_item['final_website'] = scrapy.Field()
-    coupon_item['store'] = scrapy.Field()
-    coupon_item['store_url_name'] = scrapy.Field()
-    coupon_item['store_description'] = scrapy.Field()
-    coupon_item['store_category'] = scrapy.Field()
-    coupon_item['store_website'] = scrapy.Field()
-    coupon_item['store_country'] = scrapy.Field()
-    coupon_item['store_picture'] = scrapy.Field()
-    coupon_item['created_at'] = scrapy.Field()
-    coupon_item['status'] = scrapy.Field()
-    coupon_item['depth'] = scrapy.Field()
-    coupon_item['download_timeout'] = scrapy.Field()
-    coupon_item['download_slot'] = scrapy.Field()
-    coupon_item['download_latency'] = scrapy.Field()
-    pass
-
-
 def get_domin_url(long_url):
-    domin = re.findall(r'^(http[s]?://.+?)/', long_url)
+    domin = re.findall(r'^(http[s]?://.+?)[/?]', long_url)
     return domin[0] if domin else None
     pass
 
@@ -76,14 +30,14 @@ class OfferSpider(scrapy.Spider):
             for letter in letters:
                 href = self.base_url + letter.get('href')
                 yield scrapy.Request(href, callback=self.letter_page_parse)
-        elif response.url == self.start_urls[1]:
-            top_categories = soup.find_all('div', class_='category list')
-            for top_category in top_categories:
-                categries = top_category.find_all('a')
-                for category in categries:
-                    href = self.base_url + category.get('href')
-                    yield scrapy.Request(href, callback=self.category_page_parse)
-        pass
+                # elif response.url == self.start_urls[1]:
+                #     top_categories = soup.find_all('div', class_='category list')
+                #     for top_category in top_categories:
+                #         categries = top_category.find_all('a')
+                #         for category in categries:
+                #             href = self.base_url + category.get('href')
+                #             yield scrapy.Request(href, callback=self.category_page_parse)
+                # pass
 
     def category_page_parse(self, response):
         html = response.body
@@ -103,8 +57,6 @@ class OfferSpider(scrapy.Spider):
         # category_item['download_latency = scrapy.Field()
         yield category_item
 
-        pass
-
     def letter_page_parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
@@ -122,15 +74,14 @@ class OfferSpider(scrapy.Spider):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
         store_item = StoreItem()
-        coupon_item = CouponItem()
         # 处理字段定位
         # store
         store_item['type'] = 'store'
         store_item['logo_url'] = 'https:' + soup.find('div', id='header-logo').a.img.get('src')
-        store_item['title'] = soup.find('div', id='filterable-header').find('strong').text
+        store_item['title'] = soup.find('div', id='filterable-header').find('strong').text.strip()
         store_item['name'] = store_item['title']
-        store_item['site'] = 'offers.com'
-        store_item['url_name'] = response.url
+        store_item['site'] = 'offers'
+        store_item['url_name'] = response.url.split('/')[-2]
         store_item['description'] = soup.find('div', id='company-information').find('p').text
         store_item['category'] = soup.find_all('a', itemprop='item')[-1].find('span').text
         store_item['website'] = get_real_url(self.base_url + soup.find('div', id='header-logo').a.get('href'))
@@ -139,12 +90,16 @@ class OfferSpider(scrapy.Spider):
         store_item['coupon_count'] = soup.find('div', id='merchant-stats').find('tr').find('span').text
         store_item['created_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         store_item['final_website'] = get_domin_url(store_item['website'])
-
+        if store_item['final_website'] == '' or store_item['final_website'] is None or store_item[
+            'final_website'] == '#' or store_item['final_website'] == 'https://www.offers.com':
+            print(store_item['final_website'])
         # coupon
         for offer in soup.find_all('div', class_='offerstrip'):
+
+            coupon_item = CouponItem()
             coupon_item['type'] = 'coupon'
             coupon_item['name'] = offer.find('div', class_='offer-info').find('a').text
-            coupon_item['site'] = 'offers.com'
+            coupon_item['site'] = 'offers'
             coupon_item['description'] = coupon_item['name']
             try:
                 coupon_item['verify'] = 'Y' if offer.find('span', class_='verified').find(
@@ -170,7 +125,7 @@ class OfferSpider(scrapy.Spider):
                 coupon_item['code'] = ''
             coupon_item['final_website'] = store_item['final_website']
             coupon_item['store'] = store_item['title']
-            coupon_item['store_url_name'] = response.url
+            coupon_item['store_url_name'] = store_item['url_name']
             coupon_item['store_description'] = store_item['description']
             coupon_item['store_category'] = store_item['category']
             coupon_item['store_website'] = store_item['website']
@@ -191,13 +146,15 @@ def get_real_url(url, try_count=1):
     if try_count > 3:
         return url
     try:
-        rs = requests.get(url, headers=get_header(), timeout=10)
+        rs = requests.get(url, headers=get_header(), timeout=10, verify=False)
         if rs.status_code > 400:
             return get_real_url(url, try_count + 1)
         if get_domin_url(rs.url) == get_domin_url(url):
             target_url = re.findall(r'replace\(\'(.+?)\'', rs.content.decode())
-            return target_url[0].replace('\\', '') if target_url else rs.url
+            if target_url:
+                return target_url[0].replace('\\', '') if re.match(r'http', target_url[0]) else rs.url
         else:
             return get_real_url(rs.url)
-    except:
+    except Exception as e:
+        print(e)
         return get_real_url(url, try_count + 1)
