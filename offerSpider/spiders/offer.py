@@ -131,7 +131,7 @@ class OfferSpider(scrapy.Spider):
             coupon_item['store_category'] = store_item['category']
             coupon_item['store_website'] = store_item['website']
             coupon_item['store_country'] = "US"
-            # coupon_item['store_picture'] = scrapy.Field()
+            coupon_item['store_picture'] = store_item['logo_url']
             coupon_item['created_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             coupon_item['status'] = '0'
             # coupon_item['depth'] = scrapy.Field()
