@@ -110,9 +110,9 @@ class OfferSpider(scrapy.Spider):
             try:
                 div = offer.find('div', class_='badge-text')
                 span = offer.find('span', class_='dolphin flag')
-                coupon_item['coupon_type'] = div.text.strip() if div else span.text.strip()
+                coupon_item['coupon_type'] = div.text if div else span.text
             except:
-                coupon_item['coupon_type'] = offer.find('div', class_='discount').text.strip()
+                coupon_item['coupon_type'] = "DEAL"
             if 'code' in coupon_item['coupon_type']:
                 data_offer_id = offer.get('data-offer-id')
                 long_id = coupon_item['link'].split('/')[-2]
