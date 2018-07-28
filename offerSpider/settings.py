@@ -14,7 +14,7 @@ BOT_NAME = 'offerSpider'
 SPIDER_MODULES = ['offerSpider.spiders']
 NEWSPIDER_MODULE = 'offerSpider.spiders'
 IMAGES_STORE = 'spider'
-
+LOG_LEVEL = "INFO"
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'offerSpider (+http://www.yourdomain.com)'
 
@@ -22,12 +22,12 @@ IMAGES_STORE = 'spider'
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 1
+CONCURRENT_REQUESTS = 32
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 2
+DOWNLOAD_DELAY = 1
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
 # CONCURRENT_REQUESTS_PER_IP = 16
@@ -55,9 +55,9 @@ DEFAULT_REQUEST_HEADERS = {
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-# DOWNLOADER_MIDDLEWARES = {
-#    'offerSpider.middlewares.OfferspiderDownloaderMiddleware': 543,
-# }
+DOWNLOADER_MIDDLEWARES = {
+    'offerSpider.middlewares.UserAgentDownloaderMiddleware': 543,
+}
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html

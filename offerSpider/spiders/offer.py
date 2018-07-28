@@ -10,7 +10,7 @@ import re
 
 
 def get_domin_url(long_url):
-    domin = re.findall(r'^(http[s]?://.+?)[/?]', long_url)
+    domin = re.findall(r'^(http[s]?://.+?)[/?]', long_url+'/')
     return domin[0] if domin else None
     pass
 
@@ -117,7 +117,7 @@ class OfferSpider(scrapy.Spider):
                 data_offer_id = offer.get('data-offer-id')
                 long_id = coupon_item['link'].split('/')[-2]
                 code_get_url = self.code_url.replace('code_id', data_offer_id).replace('long_id', long_id)
-                res = requests.get(code_get_url, headers=get_header(), verify=False)
+                res = requests.get(code_get_url, headers=get_header())
                 code = re.findall(r'<div class="coupon-code">(.+?)</div>', res.content.decode())
                 coupon_item['code'] = code[0] if code else ''
                 coupon_item['coupon_type'] = "CODE"
@@ -147,17 +147,11 @@ def get_real_url(url, try_count=1):
     if try_count > 3:
         return url
     try:
-        rs = requests.get(url, headers=get_header(), timeout=10, verify=False)
+        rs = requests.get(url, headers=get_header(), timeout=10)
         if rs.status_code > 400:
             return get_real_url(url, try_count + 1)
-        if get_domin_url(rs.url) == get_domin_url(url):
-            target_url = re.findall(r'replace\(\'(.+?)\'', rs.content.decode())
-            if target_url:
-                return target_url[0].replace('\\', '') if re.match(r'http', target_url[0]) else rs.url
-            else:
-                return rs.url
         else:
-            return get_real_url(rs.url)
+            return rs.url
     except Exception as e:
         print(e)
         return get_real_url(url, try_count + 1)
