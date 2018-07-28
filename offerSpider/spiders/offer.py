@@ -148,7 +148,7 @@ def get_real_url(url, try_count=1):
         return url
     try:
         rs = requests.get(url, headers=get_header(), timeout=10)
-        if rs.status_code > 400:
+        if rs.status_code > 400 and get_domin_url(rs.url)=='www.offers.com':
             return get_real_url(url, try_count + 1)
         else:
             return rs.url
