@@ -10,7 +10,7 @@ import re
 
 
 def get_domin_url(long_url):
-    domin = re.findall(r'^(http[s]?://.+?)[/?]', long_url+'/')
+    domin = re.findall(r'^(http[s]?://.+?)[/?]', long_url + '/')
     return domin[0] if domin else None
     pass
 
@@ -22,6 +22,9 @@ class OfferSpider(scrapy.Spider):
     base_url = 'https://www.offers.com'
     code_url = 'https://www.offers.com/exit/modal/offerid/code_id/?view_buoy=long_id'
 
+    def start_requests(self):
+        yield scrapy.Request(url='https://www.offers.com/thingsremembered/', callback=self.store_page_parse)
+
     def parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
@@ -30,13 +33,13 @@ class OfferSpider(scrapy.Spider):
             for letter in letters:
                 href = self.base_url + letter.get('href')
                 yield scrapy.Request(href, callback=self.letter_page_parse)
-        elif response.url == self.start_urls[1]:
-            top_categories = soup.find_all('div', class_='category list')
-            for top_category in top_categories:
-                categries = top_category.find_all('a')
-                for category in categries:
-                    href = self.base_url + category.get('href')
-                    yield scrapy.Request(href, callback=self.category_page_parse)
+        # elif response.url == self.start_urls[1]:
+        #     top_categories = soup.find_all('div', class_='category list')
+        #     for top_category in top_categories:
+        #         categries = top_category.find_all('a')
+        #         for category in categries:
+        #             href = self.base_url + category.get('href')
+        #             yield scrapy.Request(href, callback=self.category_page_parse)
         pass
 
     def category_page_parse(self, response):
@@ -95,11 +98,14 @@ class OfferSpider(scrapy.Spider):
             print(store_item['final_website'])
         # coupon
         for offer in soup.find_all('div', class_='offerstrip'):
+            if 'expired' in offer.parent.get('class'):
+                continue
             coupon_item = CouponItem()
             coupon_item['type'] = 'coupon'
             coupon_item['name'] = offer.find('div', class_='offer-info').find('a').text
             coupon_item['site'] = 'offers'
-            coupon_item['description'] = coupon_item['name']
+            description = offer.find('div', class_='description organic')
+            coupon_item['description'] = description.text.strip() if description else ""
             try:
                 coupon_item['verify'] = 'Y' if offer.find('span', class_='verified').find(
                     'strong').text == "Verified" else "N"
@@ -110,10 +116,11 @@ class OfferSpider(scrapy.Spider):
             try:
                 div = offer.find('div', class_='badge-text')
                 span = offer.find('span', class_='dolphin flag')
-                coupon_item['coupon_type'] = div.text if div else span.text
+                coupon_type = div.text if div else ''
+                coupon_type += span.text if span else ''
             except:
                 coupon_item['coupon_type'] = "DEAL"
-            if 'code' in coupon_item['coupon_type']:
+            if 'code' in coupon_type:
                 data_offer_id = offer.get('data-offer-id')
                 long_id = coupon_item['link'].split('/')[-2]
                 code_get_url = self.code_url.replace('code_id', data_offer_id).replace('long_id', long_id)
@@ -148,7 +155,7 @@ def get_real_url(url, try_count=1):
         return url
     try:
         rs = requests.get(url, headers=get_header(), timeout=10)
-        if rs.status_code > 400 and get_domin_url(rs.url)=='www.offers.com':
+        if rs.status_code > 400 and get_domin_url(rs.url) == 'www.offers.com':
             return get_real_url(url, try_count + 1)
         else:
             return rs.url
