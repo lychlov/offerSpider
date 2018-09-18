@@ -49,14 +49,15 @@ class Deals420Spider(scrapy.Spider):
             coupon['coupon_type'] = 'DEAL' if 'Deal' in button.text else 'CODE'
             coupon['code'] = button.find('div', class_='code').text.strip() if coupon['coupon_type'] != 'DEAL' else ''
             link = button.find('a').get('href') if coupon['coupon_type'] == 'DEAL' else re.findall(r"href='(.+?)';",
-                                                                                                   button.next_sibling.next_sibling.text)[0]
+                                                                                                   button.next_sibling.next_sibling.text)[
+                0]
             coupon['final_website'] = get_real_url(link)
             store_info = offer.find('span', class_='wlt_shortcode_store')
             coupon['store'] = store_info.find('a').text.strip()
-            coupon['store_url_name'] = get_domain_url(coupon['final_website'])
+            coupon['store_url_name'] = store_info.find('a').get('href')
             coupon['store_description'] = ''
             coupon['store_category'] = category
-            coupon['store_website'] = store_info.find('a').get('href')
+            coupon['store_website'] = get_domain_url(coupon['final_website'])
             coupon['store_country'] = 'US'
             coupon['store_picture'] = offer.find('img').get('src')
             coupon['created_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
