@@ -38,7 +38,7 @@ class Deals420Spider(scrapy.Spider):
             coupon['name'] = offer.find('div', class_='titletext').find('span').text.strip()
             coupon['site'] = '420.deals'
             coupon['description'] = offer.find('div', class_='excerpttext').find('p').text.strip()
-            coupon['verify'] = 'false'
+            coupon['verify'] = False
             button = offer.find('div', class_='clicktoreveal')
 
             # coupon['link'] = offer.find('div', class_='titletext').find('a').get('href')
