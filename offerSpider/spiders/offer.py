@@ -21,6 +21,7 @@ class OfferSpider(scrapy.Spider):
     start_urls = ['https://www.offers.com/stores/', 'https://www.offers.com/c/']
     base_url = 'https://www.offers.com'
     code_url = 'https://www.offers.com/exit/modal/offerid/code_id/?view_buoy=long_id'
+    store_count = 0
 
     def start_requests(self):
         yield scrapy.Request(url='https://www.offers.com/thingsremembered/', callback=self.store_page_parse)
@@ -64,13 +65,16 @@ class OfferSpider(scrapy.Spider):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
         stores = []
+
         try:
             stores = soup.find('div', class_='stores-by-letter').find_all('a')
         except:
             print(response.url)
         for store in stores:
             href = self.base_url + store.get('href')
-            yield scrapy.Request(href, callback=self.store_page_parse)
+            self.store_count += 1
+            # yield scrapy.Request(href, callback=self.store_page_parse)
+        print('共有商店：%s 间'% self.store_count)
         pass
 
     def store_page_parse(self, response):
