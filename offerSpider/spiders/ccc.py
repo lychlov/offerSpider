@@ -38,7 +38,8 @@ class CccSpider(scrapy.Spider):
         counts = [int(x.text) for x in counts]
         total_page = int(sum(counts) / 12)
         # total_page = 2
-        yield scrapy.Request(url=response.url + '?fwp_load_more=%s' % total_page, callback=self.coupon_parse)
+        yield scrapy.Request(url=response.url + '?fwp_load_more=%s' % total_page, callback=self.coupon_parse,
+                             cookies=self.cookie)
         pass
 
     def coupon_parse(self, response):
@@ -46,12 +47,15 @@ class CccSpider(scrapy.Spider):
         soup = BeautifulSoup(html, 'lxml')
         coupon_infos = soup.find('div', class_='facetwp-template').find_all('div', class_='coupon-box')
         for coupon_info in coupon_infos:
-            expired = coupon_info.find('div', class_='listingexpiry').find('i').text.strip()
+            expired = coupon_info.find('div', class_='listingexpiry').text.strip()
             if 'expired' in expired:
                 continue
             coupon = CouponItem()
             coupon['type'] = 'coupon'
-            coupon['name'] = coupon_info.find('div', class_='listingtitle').find('a').text.strip()
+            try:
+                coupon['name'] = coupon_info.find('div', class_='listingtitle').find('a').text.strip()
+            except:
+                coupon['name'] = ''
             coupon['site'] = 'cannabiscouponcodes.com'
             coupon['description'] = coupon_info.find('div', class_='listingsexcerpt').find('span').text.strip()
             coupon['verify'] = False
@@ -61,27 +65,51 @@ class CccSpider(scrapy.Spider):
             else:
                 script = coupon_info.find('div', class_='countdowntimer').find('script')
 
-                coupon['expire_at'] = re.findall(r'var dateStr =	"(.+?)";', script)[0]
+                coupon['expire_at'] = re.findall(r'var dateStr \=\t"(.+?)";', str(script))[0]
             coupon['coupon_type'] = 'CODE' if 'Coupon' in coupon_info.find('div', class_='main-deal-button').find(
                 'a').text else 'DEAL'
-            coupon_id = coupon_info.find('div', class_='main-deal-button').find('a').get('data-couponid')
-            code_get_url = self.base_code_url % coupon_id
-            res = requests.get(code_get_url, headers=get_header())
-            if coupon['coupon_type'] == 'CODE':
-                code = re.findall(r'id="copybtn">(.+?)</div>', res.content.decode())
-                coupon['code'] = code
-            else:
-                coupon['code'] = ''
-            coupon['final_website'] = get_real_url(re.findall(r'(https://cannabiscouponcodes.com/out/.?/link/)')[0])
+
+            coupon['created_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            coupon['store_country'] = 'US'
+            coupon['store_picture'] = coupon_info.find('div', class_='coupon-box-logo').find('img').get('src')
+            coupon['store_category'] = re.findall(r'discount-category/(.+?)/', response.url)[0]
             coupon['store'] = coupon_info.find('div', class_='listingsstore').find('a').text.strip()
             coupon['store_url_name'] = coupon_info.find('div', class_='listingsstore').find('a').get('href')
             coupon['store_description'] = ''
-            coupon['store_category'] = re.findall(r'discount-category/(.+?)/', response.url)[0]
-            coupon['store_website'] = get_domain_url(coupon['final_website'])
-            coupon['store_country'] = 'US'
-            coupon['store_picture'] = coupon_info.find('div', class_='coupon-box-logo').find('img').get('src')
-            coupon['created_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            yield coupon
+
+            coupon_id = coupon_info.find('div', class_='main-deal-button').find('a').get('data-couponid')
+            code_get_url = self.base_code_url % coupon_id
+            yield scrapy.Request(url=code_get_url, callback=self.code_parse, cookies=self.cookie,
+                                 meta={'item': coupon})
+
+    def code_parse(self, response):
+        html = response.body.decode()
+        coupon_item = response.meta['item']
+        if coupon_item['coupon_type'] == 'CODE':
+            code = re.findall(r'id="copybtn">(.+?)</div>', html)[0]
+            coupon_item['code'] = code
+        else:
+            coupon_item['code'] = ''
+
+        out_link = re.findall(r'(https://cannabiscouponcodes.com/out/.+?/link/)', html)[0]
+        if out_link in self.store_info_cache.keys():
+            coupon_item['final_website'] = self.store_info_cache[out_link].get('final_website','')
+            coupon_item['store_website'] = self.store_info_cache[out_link].get('store_website','')
+            yield coupon_item
+        else:
+            yield scrapy.Request(url=out_link, callback=self.out_link_parse, meta={'item': coupon_item,
+                                                                               'out_link': out_link})
+        pass
+
+    def out_link_parse(self, response):
+        html = response.body.decode()
+        coupon_item = response.meta['item']
+        out_link = response.meta['out_link']
+        coupon_item['final_website'] = response.url
+        coupon_item['store_website'] = get_domain_url(response.url)
+        self.store_info_cache[out_link] = {'final_website': coupon_item['final_website'],
+                                           'store_website': coupon_item['store_website']}
+        yield coupon_item
         pass
 
     def store_parse(self, response):
