@@ -44,6 +44,7 @@ DEFAULT_REQUEST_HEADERS = {
     'Accept-Language': 'en-US,en;q=0.5',
     'Connection': 'keep-alive',
     'Accept-Encoding': 'gzip, deflate',
+    'User-Agent': "Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1",
 
 }
 
@@ -56,7 +57,7 @@ DEFAULT_REQUEST_HEADERS = {
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'offerSpider.middlewares.UserAgentDownloaderMiddleware': 543,
+    # 'offerSpider.middlewares.UserAgentDownloaderMiddleware': 543,
 }
 
 # Enable or disable extensions

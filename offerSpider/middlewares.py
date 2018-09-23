@@ -109,3 +109,4 @@ class UserAgentDownloaderMiddleware(object):
     def process_request(self, request, spider):
         agent = random.choice(agents)
         request.headers["User-Agent"] = agent
+        request.headers['cookie']='sucuri_cloudproxy_uuid_a66fc4a74=7c9cae3aa8599d3b2addf6be3e84e3d0; _ga=GA1.2.651488376.1537679105; _gid=GA1.2.379786023.1537679105; PHPSESSID=p76h3qfv6en1ac06h6cc2vkp25'
