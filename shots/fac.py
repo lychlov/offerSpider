@@ -24,6 +24,6 @@ type = scrapy.Field()
     download_latency = scrapy.Field()
 '''
 
-source_list = source.replace('    ','').replace(' = scrapy.Field()','').split('\n')
+source_list = source.replace('    ', '').replace(' = scrapy.Field()', '').split('\n')
 for item in source_list:
-    print("coupon['%s']=''"%item)
+    print("coupon['%s']=''" % item)
