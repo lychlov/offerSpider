@@ -16,5 +16,5 @@ from scrapy.utils.project import get_project_settings
 process = CrawlerProcess(get_project_settings())
 
 # 'offer' is the name of one of the spiders of the project.
-process.crawl('saveon')
+process.crawl('saveon2')
 process.start()  # the script will block here until the crawling is finished
