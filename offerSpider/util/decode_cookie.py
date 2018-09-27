@@ -20,5 +20,5 @@ def get_cookies(crypto):
     decypt = decypt.replace('document.', '').replace(' location.reload();', '')
     js_deal = js2py.eval_js(decypt)
     for pair in js_deal.split(';'):
-        cookies[pair.split('=')[0]]=pair.split('=')[1]
+        cookies[pair.split('=')[0]] = pair.split('=')[1]
     return cookies
