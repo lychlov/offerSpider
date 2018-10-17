@@ -51,7 +51,7 @@ class VapingSpider(scrapy.Spider):
             coupon['store'] = store_info.find('h1').text.strip()
             coupon['store_url_name'] = button.get('href')
             coupon['store_description'] = store_info.find('div',class_='desc').text.strip()
-            coupon['store_category'] = ''
+            coupon['store_category'] = coupon_info.find('p',class_='tag').text.strip().replace('Tags:','')
             coupon['store_website'] = get_domain_url(coupon['final_website'])
             coupon['store_country'] = 'US'
             coupon['store_picture'] = store_info.find('img').get('src')

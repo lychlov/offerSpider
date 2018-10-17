@@ -25,6 +25,10 @@ class CccSpider(scrapy.Spider):
     base_code_url = 'https://cannabiscouponcodes.com/?core_aj=1&action=couponform&couponid=%s'
     cookie = None
 
+    def start_requests(self):
+        for url in self.cat_urls:
+            yield scrapy.Request(url=url, callback=self.parse_bak)
+
     def parse(self, response):
         base64_crypto = re.findall(r"S='(.+?)'", response.body.decode())[0]
         self.cookie = get_cookies(base64_crypto)
@@ -38,8 +42,7 @@ class CccSpider(scrapy.Spider):
         counts = [int(x.text) for x in counts]
         total_page = int(sum(counts) / 12)
         # total_page = 2
-        yield scrapy.Request(url=response.url + '?fwp_load_more=%s' % total_page, callback=self.coupon_parse,
-                             cookies=self.cookie)
+        yield scrapy.Request(url=response.url + '?fwp_load_more=%s' % total_page, callback=self.coupon_parse)
         pass
 
     def coupon_parse(self, response):
@@ -79,7 +82,7 @@ class CccSpider(scrapy.Spider):
 
             coupon_id = coupon_info.find('div', class_='main-deal-button').find('a').get('data-couponid')
             code_get_url = self.base_code_url % coupon_id
-            yield scrapy.Request(url=code_get_url, callback=self.code_parse, cookies=self.cookie,
+            yield scrapy.Request(url=code_get_url, callback=self.code_parse,
                                  meta={'item': coupon})
 
     def code_parse(self, response):
@@ -93,12 +96,12 @@ class CccSpider(scrapy.Spider):
 
         out_link = re.findall(r'(https://cannabiscouponcodes.com/out/.+?/link/)', html)[0]
         if out_link in self.store_info_cache.keys():
-            coupon_item['final_website'] = self.store_info_cache[out_link].get('final_website','')
-            coupon_item['store_website'] = self.store_info_cache[out_link].get('store_website','')
+            coupon_item['final_website'] = self.store_info_cache[out_link].get('final_website', '')
+            coupon_item['store_website'] = self.store_info_cache[out_link].get('store_website', '')
             yield coupon_item
         else:
             yield scrapy.Request(url=out_link, callback=self.out_link_parse, meta={'item': coupon_item,
-                                                                               'out_link': out_link})
+                                                                                   'out_link': out_link})
         pass
 
     def out_link_parse(self, response):
