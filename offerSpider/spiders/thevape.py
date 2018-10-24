@@ -18,13 +18,13 @@ class ThevapeSpider(scrapy.Spider):
     def parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
-        coupon_infos = soup.find('div', class_='wpsm_arrowlist').find_all('li')
+        coupon_infos = soup.find('div', class_='templatera_shortcode').find_all('div',class_='centered-container')[2:-1]
         for coupon_info in coupon_infos:
             coupon = CouponItem()
             coupon['type'] = 'coupon'
             coupon['name'] = coupon_info.find('a').text.strip()
             coupon['site'] = 'thevape.guide'
-            coupon['description'] = re.findall(r'"- (.+?)"', str(coupon_info))[0]
+            coupon['description'] = re.findall(r'<p style="text-align: center;">(.+?)</p>', str(coupon_info))[1]
             coupon['verify'] = False
             coupon['link'] = ''
             coupon['expire_at'] = ''
