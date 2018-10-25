@@ -51,7 +51,10 @@ class PuregreenlivingSpider(scrapy.Spider):
         link = self.base_url + button.get('data-url')
 
         coupon['final_website'] = get_real_url(link)
-        coupon['store'] = button.get('data-url').replace('/', '')
+        # coupon['store'] = button.get('data-url').replace('/', '')
+        coupon['store'] = soup.find('div', class_='post-header-title').find('span', class_='post-title')
+        coupon['store'] = coupon['store'].text.replace(' Coupon Codes', '') if coupon['store'] else button.get(
+            'data-url').replace('/', '')
         coupon['store_url_name'] = link
         coupon['store_description'] = ''
         coupon['store_category'] = soup.find('span', class_='term-badge').find('a').text.strip()

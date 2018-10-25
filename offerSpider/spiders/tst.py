@@ -52,7 +52,10 @@ class TstSpider(scrapy.Spider):
         coupon['coupon_type'] = 'CODE' if 'code' in button.get('data-classes') else 'DEAL'
         coupon['code'] = button.get('data-code')
         coupon['final_website'] = get_real_url(self.base_url + button.get('data-url'))
-        coupon['store'] = button.get('data-url')
+        # coupon['store'] = button.get('data-url')
+        coupon['store'] = soup.find('div', class_='post-header-title').find('span', class_='post-title')
+        coupon['store'] = coupon['store'].text.replace(' Coupon Codes', '') if coupon['store'] else button.get(
+            'data-url')
         coupon['store_url_name'] = self.base_url + button.get('data-url')
         coupon['store_description'] = ''
         coupon['store_category'] = 'CDB DEALS'
