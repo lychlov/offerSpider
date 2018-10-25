@@ -25,7 +25,7 @@ class CosSpider(scrapy.Spider):
                 coupon['type'] = 'coupon'
                 coupon['name'] = ''
                 coupon['site'] = 'www.cbdoilusers.com'
-                code_info = coupon_info.find('h5', class_='vc_custom_heading').text.replace('\n', '')
+                code_info = coupon_info.find_all('h4', class_='vc_custom_heading')[-1].text.replace('\n', '')
                 code = re.findall(r':(.+?) - ', code_info)
                 description = re.findall(r' - (.+?)$', code_info)
                 coupon['description'] = description[0] if description else re.findall(r':(.+?)', code_info)[0]
@@ -45,7 +45,8 @@ class CosSpider(scrapy.Spider):
                 coupon['store_picture'] = coupon_info.find('img').get('src')
                 coupon['created_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 yield coupon
-            except:
+            except Exception as e:
+                print(e)
                 pass
         pass
 
