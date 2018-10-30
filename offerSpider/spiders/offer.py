@@ -23,8 +23,8 @@ class OfferSpider(scrapy.Spider):
     code_url = 'https://www.offers.com/exit/modal/offerid/code_id/?view_buoy=long_id'
     store_count = 0
 
-    def start_requests(self):
-        yield scrapy.Request(url='https://www.offers.com/thingsremembered/', callback=self.store_page_parse)
+    # def start_requests(self):
+    #     yield scrapy.Request(url='https://www.offers.com/thingsremembered/', callback=self.store_page_parse)
 
     def parse(self, response):
         html = response.body
@@ -73,7 +73,7 @@ class OfferSpider(scrapy.Spider):
         for store in stores:
             href = self.base_url + store.get('href')
             self.store_count += 1
-            # yield scrapy.Request(href, callback=self.store_page_parse)
+            yield scrapy.Request(href, callback=self.store_page_parse)
         print('共有商店：%s 间'% self.store_count)
         pass
 
@@ -84,14 +84,14 @@ class OfferSpider(scrapy.Spider):
         # 处理字段定位
         # store
         store_item['type'] = 'store'
-        store_item['logo_url'] = 'https:' + soup.find('div', id='header-logo').a.img.get('src')
-        store_item['title'] = soup.find('div', id='filterable-header').find('strong').text.strip()
+        store_item['logo_url'] = 'https:' + soup.find('div', id='company-identity').a.img.get('src')
+        store_item['title'] = soup.find('div', id='offer-section').find('strong').text.strip()
         store_item['name'] = store_item['title']
         store_item['site'] = 'offers'
         store_item['url_name'] = response.url.split('/')[-2]
         store_item['description'] = soup.find('div', id='company-information').find('p').text
         store_item['category'] = soup.find_all('a', itemprop='item')[-1].find('span').text
-        store_item['website'] = get_real_url(self.base_url + soup.find('div', id='header-logo').a.get('href'))
+        store_item['website'] = get_real_url(self.base_url + soup.find('div', id='company-identity').a.get('href'))
         store_item['country'] = "US"
         store_item['picture'] = scrapy.Field()
         store_item['coupon_count'] = soup.find('div', id='merchant-stats').find('tr').find('span').text
@@ -106,10 +106,10 @@ class OfferSpider(scrapy.Spider):
                 continue
             coupon_item = CouponItem()
             coupon_item['type'] = 'coupon'
-            coupon_item['name'] = offer.find('div', class_='offer-info').find('a').text
+            coupon_item['name'] = offer.find('h3', class_='name').text.strip()
             coupon_item['site'] = 'offers'
-            description = offer.find('div', class_='description organic')
-            coupon_item['description'] = description.text.strip() if description else ""
+            description = offer.find('div', class_='more-details')
+            coupon_item['description'] = description.find('p').text.strip() if description else ""
             try:
                 coupon_item['verify'] = 'Y' if offer.find('span', class_='verified').find(
                     'strong').text == "Verified" else "N"
