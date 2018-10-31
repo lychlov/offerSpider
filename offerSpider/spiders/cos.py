@@ -23,11 +23,11 @@ class CosSpider(scrapy.Spider):
             try:
                 coupon = CouponItem()
                 coupon['type'] = 'coupon'
-                coupon['name'] = ''
-                coupon['site'] = 'www.cbdoilusers.com'
                 code_info = coupon_info.find_all('h4', class_='vc_custom_heading')[-1].text.replace('\n', '')
+                coupon['name'] = re.findall(r' - (.+?)$', code_info)[0]
+                coupon['site'] = 'www.cbdoilusers.com'
                 code = re.findall(r':(.+?) - ', code_info)
-                description = re.findall(r' - (.+?)$', code_info)
+                description = re.findall(r' - (.+?)$', code_info)[0]
                 coupon['description'] = description[0] if description else re.findall(r':(.+?)', code_info)[0]
                 coupon['verify'] = False
                 coupon['link'] = ''
