@@ -15,6 +15,17 @@ class VapingSpider(scrapy.Spider):
     allowed_domains = ['vaping.coupons']
     start_urls = ['https://vaping.coupons/stores/']
 
+    def __init__(self, store=None, *args, **kwargs):
+        super(VapingSpider, self).__init__(*args, **kwargs)
+        self.store = store
+
+    def start_requests(self):
+        if self.store:
+            yield scrapy.Request(url=self.store, callback=self.coupon_parse)
+        else:
+            for url in self.start_urls:
+                yield scrapy.Request(url=url, callback=self.parse)
+
     def parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
@@ -31,7 +42,7 @@ class VapingSpider(scrapy.Spider):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
         coupon_infos = soup.find_all('div', class_='type-coupon')
-        store_info =soup.find('div',class_='store')
+        store_info = soup.find('div', class_='store')
         for coupon_info in coupon_infos:
             coupon = CouponItem()
             if coupon_info.find('p', class_='expired_msg'):
@@ -50,8 +61,8 @@ class VapingSpider(scrapy.Spider):
             coupon['final_website'] = get_real_url(button.get('href'))
             coupon['store'] = store_info.find('h1').text.strip()
             coupon['store_url_name'] = button.get('href')
-            coupon['store_description'] = store_info.find('div',class_='desc').text.strip()
-            coupon['store_category'] = coupon_info.find('p',class_='tag').text.replace('Tags:','').strip()
+            coupon['store_description'] = store_info.find('div', class_='desc').text.strip()
+            coupon['store_category'] = coupon_info.find('p', class_='tag').text.replace('Tags:', '').strip()
             coupon['store_website'] = get_domain_url(coupon['final_website'])
             coupon['store_country'] = 'US'
             coupon['store_picture'] = store_info.find('img').get('src')

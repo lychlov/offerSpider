@@ -16,6 +16,17 @@ class Saveon2Spider(scrapy.Spider):
     start_urls = ['https://www.saveoncannabis.com/coupons/']
     page_url = 'https://www.saveoncannabis.com/coupons/%s/'
 
+    def __init__(self, store=None, *args, **kwargs):
+        super(Saveon2Spider, self).__init__(*args, **kwargs)
+        self.store = store
+
+    def start_requests(self):
+        if self.store:
+            yield scrapy.Request(url=self.store, callback=self.coupon_parse)
+        else:
+            for url in self.start_urls:
+                yield scrapy.Request(url=url, callback=self.parse)
+
     def parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
