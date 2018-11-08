@@ -31,7 +31,7 @@ class ThevapeSpider(scrapy.Spider):
             coupon['coupon_type'] = 'CODE'
             coupon['code'] = coupon_info.find('span').text.strip()
             coupon['final_website'] = get_real_url(coupon_info.find('a').get('href'))
-            coupon['store'] = coupon['name']
+            coupon['store'] = coupon_info.find_all('p')[0].text.strip()
             coupon['store_url_name'] = coupon_info.find('a').get('href')
             coupon['store_description'] = ''
             coupon['store_category'] = ''

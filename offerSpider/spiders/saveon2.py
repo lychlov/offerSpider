@@ -30,10 +30,10 @@ class Saveon2Spider(scrapy.Spider):
     def parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
-        if not re.findall(r'/coupons/(.+?)/', response.url):
-            max_page = int(soup.find('ul', class_='pagination').find_all('a')[-1].text)
-            for i in range(2, max_page + 1):
-                yield scrapy.Request(url=self.page_url % i, callback=self.parse)
+        # if not re.findall(r'/coupons/(.+?)/', response.url):
+        #     max_page = int(soup.find('ul', class_='pagination').find_all('a')[-1].text)
+            # for i in range(2, max_page + 1):
+                # yield scrapy.Request(url=self.page_url % i, callback=self.parse)
         coupon_infos = soup.find_all('div', class_='offer-box')
         for coupon_info in coupon_infos:
             store_link = coupon_info.find('ul', class_='bottom-meta').find('a').get('href')
