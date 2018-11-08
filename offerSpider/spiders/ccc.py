@@ -25,9 +25,16 @@ class CccSpider(scrapy.Spider):
     base_code_url = 'https://cannabiscouponcodes.com/?core_aj=1&action=couponform&couponid=%s'
     cookie = None
 
+    def __init__(self, store=None, *args, **kwargs):
+        super(CccSpider, self).__init__(*args, **kwargs)
+        self.store = store
+
     def start_requests(self):
-        for url in self.cat_urls:
-            yield scrapy.Request(url=url, callback=self.parse_bak)
+        if self.store:
+            yield scrapy.Request(url=self.store, callback=self.coupon_parse)
+        else:
+            for url in self.cat_urls:
+                yield scrapy.Request(url=url, callback=self.parse_bak)
 
     def parse(self, response):
         base64_crypto = re.findall(r"S='(.+?)'", response.body.decode())[0]
@@ -75,7 +82,8 @@ class CccSpider(scrapy.Spider):
             coupon['created_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             coupon['store_country'] = 'US'
             coupon['store_picture'] = coupon_info.find('div', class_='coupon-box-logo').find('img').get('src')
-            coupon['store_category'] = re.findall(r'discount-category/(.+?)/', response.url)[0]
+            coupon['store_category'] = re.findall(r'discount-category/(.+?)/', response.url)[0] if re.findall(
+                r'discount-category/(.+?)/', response.url) else ''
             coupon['store'] = coupon_info.find('div', class_='listingsstore').find('a').text.strip()
             coupon['store_url_name'] = coupon_info.find('div', class_='listingsstore').find('a').get('href')
             coupon['store_description'] = ''

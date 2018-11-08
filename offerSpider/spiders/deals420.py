@@ -19,9 +19,24 @@ class Deals420Spider(scrapy.Spider):
                   'https://420.deals/discount-codes-for/vaporizers/?fwp_paged=1',
                   'https://420.deals/discount-codes-for/growing-gear/?fwp_paged=1']
 
+    def __init__(self, store=None, *args, **kwargs):
+        super(Deals420Spider, self).__init__(*args, **kwargs)
+        if '?fwp_paged=1' in store:
+            self.store = store
+        else:
+            self.store = store + '?fwp_paged=1'
+
+    def start_requests(self):
+        if self.store:
+            yield scrapy.Request(url=self.store, callback=self.parse)
+        else:
+            for url in self.start_urls:
+                yield scrapy.Request(url=url, callback=self.parse)
+
     def parse(self, response):
         html = response.body
-        category = re.findall(r'discount-codes-for/(.+?)/', response.url)[0]
+        category = re.findall(r'discount-codes-for/(.+?)/', response.url)[0] if re.findall(r'discount-codes-for/(.+?)/',
+                                                                                           response.url) else ''
         soup = BeautifulSoup(html, 'lxml')
         exit_count = soup.find('b', class_='num').text
         if exit_count != '0':

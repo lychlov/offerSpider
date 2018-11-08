@@ -22,7 +22,7 @@ class ThevapeSpider(scrapy.Spider):
         for coupon_info in coupon_infos:
             coupon = CouponItem()
             coupon['type'] = 'coupon'
-            coupon['name'] = coupon_info.find('a').text.strip()
+            coupon['name'] = coupon_info.find_all('p')[1].text.strip()
             coupon['site'] = 'thevape.guide'
             coupon['description'] = re.findall(r'<p style="text-align: center;">(.+?)</p>', str(coupon_info))[1]
             coupon['verify'] = False
