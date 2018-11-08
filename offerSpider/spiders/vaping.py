@@ -38,7 +38,8 @@ class VapingSpider(scrapy.Spider):
                 continue
 
             coupon['type'] = 'coupon'
-            coupon['name'] = coupon_info.find('h3', class_='entry-title').find('a').get('title')
+            # coupon['name'] = coupon_info.find('h3', class_='entry-title').find('a').get('title')
+            coupon['name'] = coupon_info.find('h3', class_='entry-title').find('a').text.strip()
             coupon['site'] = 'vaping.coupons'
             coupon['description'] = ''
             coupon['verify'] = False
