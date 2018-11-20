@@ -21,6 +21,9 @@ class Deals420Spider(scrapy.Spider):
 
     def __init__(self, store=None, *args, **kwargs):
         super(Deals420Spider, self).__init__(*args, **kwargs)
+        if not store:
+            self.store = store
+            return
         if '?fwp_paged=1' in store:
             self.store = store
         else:

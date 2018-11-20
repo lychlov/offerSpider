@@ -53,6 +53,7 @@ class Saveon2Spider(scrapy.Spider):
         main_coupon['link'] = ''
         main_coupon['expire_at'] = main_coupon_info.find('div', class_='deal-countdown-info').text.strip().replace(
             'Expires in: ', '')
+        main_coupon['expire_at'] = '' if 'Unlimited Time' in main_coupon['expire_at'] else main_coupon['expire_at']
         main_coupon['coupon_type'] = 'CODE'
         offer_id = main_coupon_info.find('div', class_='featured-coupon-button').find('a').get('data-offer_id')
         main_coupon['final_website'] = get_real_url(
