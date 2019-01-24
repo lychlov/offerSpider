@@ -32,8 +32,8 @@ class Saveon2Spider(scrapy.Spider):
         soup = BeautifulSoup(html, 'lxml')
         # if not re.findall(r'/coupons/(.+?)/', response.url):
         #     max_page = int(soup.find('ul', class_='pagination').find_all('a')[-1].text)
-            # for i in range(2, max_page + 1):
-                # yield scrapy.Request(url=self.page_url % i, callback=self.parse)
+        # for i in range(2, max_page + 1):
+        # yield scrapy.Request(url=self.page_url % i, callback=self.parse)
         coupon_infos = soup.find_all('div', class_='offer-box')
         for coupon_info in coupon_infos:
             store_link = coupon_info.find('ul', class_='bottom-meta').find('a').get('href')
@@ -67,9 +67,10 @@ class Saveon2Spider(scrapy.Spider):
         main_coupon['store_picture'] = soup.find('div', class_='shop-logo').find('img').get('src')
         main_coupon['store_url_name'] = soup.find('div', class_='shop-logo').find('a').get('href')
         main_coupon['created_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        yield scrapy.FormRequest(url='https://www.saveoncannabis.com/wp-admin/admin-ajax.php',
-                                 formdata={'action': 'show_code', 'offer_id': offer_id}, callback=self.code_paese,
-                                 dont_filter=True, meta={'item': main_coupon})
+        # yield scrapy.FormRequest(url='https://www.saveoncannabis.com/wp-admin/admin-ajax.php',
+        #                          formdata={'action': 'show_code', 'offer_id': offer_id}, callback=self.code_paese,
+        #                          dont_filter=True, meta={'item': main_coupon})
+        yield main_coupon
 
     def code_paese(self, response):
         html = response.body

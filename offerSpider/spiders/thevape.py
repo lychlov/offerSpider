@@ -18,20 +18,20 @@ class ThevapeSpider(scrapy.Spider):
     def parse(self, response):
         html = response.body
         soup = BeautifulSoup(html, 'lxml')
-        coupon_infos = soup.find('div', class_='templatera_shortcode').find_all('div',class_='centered-container')[2:-1]
+        coupon_infos = soup.find_all('div',class_='wp-block-column')[2].find_all('tr')[1:]
         for coupon_info in coupon_infos:
             coupon = CouponItem()
             coupon['type'] = 'coupon'
-            coupon['name'] = coupon_info.find_all('p')[1].text.strip()
+            coupon['name'] = coupon_info.find('a').text.strip()
             coupon['site'] = 'thevape.guide'
-            coupon['description'] = re.findall(r'<p style="text-align: center;">(.+?)</p>', str(coupon_info))[1]
+            coupon['description'] = coupon_info.find_all('td')[1].text.strip()
             coupon['verify'] = False
             coupon['link'] = ''
             coupon['expire_at'] = ''
             coupon['coupon_type'] = 'CODE'
-            coupon['code'] = coupon_info.find('span').text.strip()
+            coupon['code'] = coupon_info.find_all('td')[2].text.strip()
             coupon['final_website'] = get_real_url(coupon_info.find('a').get('href'))
-            coupon['store'] = coupon_info.find_all('p')[0].text.strip()
+            coupon['store'] = coupon_info.find('a').text.strip()
             coupon['store_url_name'] = coupon_info.find('a').get('href')
             coupon['store_description'] = ''
             coupon['store_category'] = ''
